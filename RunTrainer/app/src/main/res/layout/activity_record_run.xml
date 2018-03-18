@@ -37,10 +37,11 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:layout_weight="1"
-                android:text="Time" />
+                android:text="0:0:0" />
 
             <TextView
-                android:text="Pace"
+                android:id="@+id/current_pace"
+                android:text="0 m/s"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -66,7 +67,7 @@
 
             <TextView
                 android:id="@+id/current_distance"
-                android:text="Distance"
+                android:text="0.0 km"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -81,6 +82,14 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@android:color/holo_green_light"/>
+
+        <ProgressBar
+            android:id="@+id/gps_accuracy_progress"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:visibility="gone"
+            android:padding="4dp"/>
 
         <LinearLayout
             android:id="@+id/start_pause_button_layout"
@@ -107,6 +116,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"/>
+
         </LinearLayout>
 
     </LinearLayout>

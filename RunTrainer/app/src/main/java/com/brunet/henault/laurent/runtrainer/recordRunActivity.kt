@@ -6,27 +6,22 @@ import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
-import android.opengl.Visibility
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AlertDialog
-import android.text.format.DateUtils.formatElapsedTime
 import android.util.Log
 import android.view.View
-import com.brunet.henault.laurent.runtrainer.R.id.current_run_elapsed_time
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationListener
-import com.google.android.gms.location.LocationServices
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import kotlinx.android.synthetic.main.activity_record_run.*
-import java.text.SimpleDateFormat
 
 class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -36,6 +31,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var locationManager : LocationManager
     private lateinit var currentLocation: Location
     private lateinit var locationListener: MyLocationListener
+    private var isPositionAccurate = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,10 +45,8 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        setupLocationListener()
-
         start_run_button.setOnClickListener {
-            startRunRecording()
+            startRunRecordingProcess()
         }
 
         pause_play_button.setOnClickListener{
@@ -129,9 +123,23 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     @SuppressLint("MissingPermission")
-    private fun startRunRecording() {
+    private fun startRunRecordingProcess() {
+        setupLocationListener()
+
         start_run_button.visibility = View.GONE
+
+        waitForGPSAccuracy()
+    }
+
+    private fun waitForGPSAccuracy(){
+        gps_accuracy_progress.visibility = View.VISIBLE
+    }
+
+    private fun startRunRecording(){
+        gps_accuracy_progress.visibility = View.GONE
         start_pause_button_layout.visibility = View.VISIBLE
+
+        setCameraPosition(currentLocation)
 
         currentRun = Run()
 
@@ -159,8 +167,14 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun setCameraPosition(location: Location){
 
-        val montrealPos = LatLng(location.latitude, location.longitude) //Assign base position
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(montrealPos,15.0f)) //Zoom in to that base position
+        val currentPos = LatLng(location.latitude, location.longitude) //Assign base position
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPos,15.0f)) //Zoom in to that base position
+    }
+
+    private fun addDotMarker(location: Location){
+        mMap.addMarker(MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.drawable.position_dot_blue))
+                .position(LatLng(location.latitude,location.longitude))
+                .anchor(0.5f,0.5f))
     }
 
     inner class updateDataThread :Thread{
@@ -173,7 +187,8 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
                 try{
                     runOnUiThread{
                         current_run_elapsed_time.text = formatElapsedTime()
-                        current_distance.text = "${currentRun.distance} m"
+                        current_distance.text = "${(currentRun.distance)} m"
+                        current_pace.text = "${currentRun.pace} m/s"
                     }
 
                     Thread.sleep(500)
@@ -201,12 +216,19 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         override fun onLocationChanged(location: Location?) {
-            location?.accuracy
-            if(location != null && location.accuracy < 20){
-                currentLocation = location //Assigns new user location
+
+            if(location != null && location.accuracy < 15){
+
+                if(!isPositionAccurate){
+                    isPositionAccurate = true
+                    startRunRecording()
+                }
+
+                currentLocation = location
                 setCameraPosition(location)
-                //updateMap(location)
+                addDotMarker(location)
                 currentRun.addLocation(location)
+                currentRun.setCurrentSpeed(location)
             }
             Log.d("location", "${currentLocation.latitude.toString()}/${currentLocation.longitude.toString()}")
         }

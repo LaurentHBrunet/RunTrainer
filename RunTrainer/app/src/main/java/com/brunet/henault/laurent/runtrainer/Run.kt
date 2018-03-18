@@ -29,6 +29,10 @@ class Run {
         return currentlyRunning
     }
 
+    fun setCurrentSpeed(location: Location){
+        pace = location.speed
+    }
+
     fun pauseRun(){
         timerThreadInstance.pauseThread()
         currentlyRunning = false
@@ -44,12 +48,14 @@ class Run {
     }
 
     fun addLocation(location: Location){
-        if(lastLocation != null){
-            distance += location.distanceTo(lastLocation)
-            Log.d("distance", location.distanceTo(lastLocation).toString())
+        if(currentlyRunning) {
+            if (lastLocation != null) {
+                distance += location.distanceTo(lastLocation)
+                Log.d("distance", location.distanceTo(lastLocation).toString())
+            }
+            lastLocation = location
+            listOfPositions.add(LatLng(location.latitude, location.longitude))
         }
-        lastLocation = location
-        listOfPositions.add(LatLng(location.latitude,location.longitude))
     }
 
     inner class timerThread :Thread{
