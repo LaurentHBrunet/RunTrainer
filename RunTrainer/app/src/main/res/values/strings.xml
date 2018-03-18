@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">RunTrainer</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_record_run">Record run</string>
+    <string name="request_heartrate_title">Heart rate monitoring</string>
+    <string name="request_heartrate_message">Would you like to connect a bluetooth heart rate monitor?</string>
+    <string name="ready_to_start_title">You\'re ready to go!</string>
+    <string name="ready_to_start_message">Just press the green start button at the bottom of your screen to start your run</string>
+    <string name="pause_button_text">Pause</string>
+    <string name="resume_button_text">Resume</string>
+</resources>
