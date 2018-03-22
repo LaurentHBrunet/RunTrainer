@@ -19,6 +19,7 @@ class Run {
     var pace = 0.0f
     var timerThreadInstance = timerThread()
     var currentlyRunning = true
+
     private var lastLocation: Location? = null
 
     init{

@@ -31,6 +31,11 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var locationManager : LocationManager
     private lateinit var currentLocation: Location
     private lateinit var locationListener: MyLocationListener
+    private var updatePeriodms: Long = 1000
+    private val ADDMAPMARKERPERIOD = 15000
+    private var markerUpdatesInPeriod = ADDMAPMARKERPERIOD / updatePeriodms
+    private var markerUpdateCount = 0
+
     private var isPositionAccurate = false
 
 
@@ -56,6 +61,8 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         stop_run_button.setOnClickListener{
             finishRunRecording()
         }
+
+        //TODO("CHECK FOR THE CURRENT UPDATE RATE SETTINGS")
 
     }
 
@@ -162,7 +169,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     @SuppressLint("MissingPermission")
     private fun finishRunRecording() {
         locationManager.removeUpdates(locationListener)
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0.0f, locationListener)
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, updatePeriodms, 0.0f, locationListener)
     }
 
     private fun setCameraPosition(location: Location){
@@ -172,9 +179,24 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun addDotMarker(location: Location){
-        mMap.addMarker(MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.drawable.position_dot_blue))
-                .position(LatLng(location.latitude,location.longitude))
-                .anchor(0.5f,0.5f))
+
+        if(isAddMarkerPeriodFinished()) {
+            mMap.addMarker(MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.drawable.position_dot_blue))
+                    .position(LatLng(location.latitude, location.longitude))
+                    .anchor(0.5f, 0.5f))
+        }
+    }
+
+    private fun isAddMarkerPeriodFinished(): Boolean{
+
+        if(markerUpdateCount < markerUpdatesInPeriod){ //Check if we reached required number of position updates
+            markerUpdateCount++
+            return false
+        } else {
+            markerUpdateCount = 0
+            Log.d("update", "updating marker")
+            return true
+        }
     }
 
     inner class updateDataThread :Thread{
