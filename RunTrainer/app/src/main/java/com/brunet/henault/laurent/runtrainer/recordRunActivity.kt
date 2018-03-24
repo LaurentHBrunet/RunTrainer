@@ -12,6 +12,7 @@ import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AlertDialog
 import android.util.Log
 import android.view.View
+import com.brunet.henault.laurent.runtrainer.R.id.*
 import com.google.android.gms.location.FusedLocationProviderClient
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -31,7 +32,8 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var locationManager : LocationManager
     private lateinit var currentLocation: Location
     private lateinit var locationListener: MyLocationListener
-    private var updatePeriodms: Long = 1000
+    private lateinit var mBluetoothHrManager: BluetoothHrManager
+    private var updatePeriodms: Long = 5000
     private val ADDMAPMARKERPERIOD = 15000
     private var markerUpdatesInPeriod = ADDMAPMARKERPERIOD / updatePeriodms
     private var markerUpdateCount = 0
@@ -71,7 +73,8 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         if(ActivityCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0.0f, locationListener)
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, updatePeriodms*2, 0.0f, locationListener)
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, updatePeriodms*2, 0.0f, locationListener)
         }
     }
     /**
@@ -93,6 +96,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
 //        val sydney = LatLng(-34.0, 151.0)
 //        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
 //        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+
     }
 
     private fun requestHeartRateSensorUse(){
@@ -112,6 +116,13 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun manageHeartRateConnection(){
+
+        mBluetoothHrManager = BluetoothHrManager(this)
+
+        if(mBluetoothHrManager.isBluetoothEnabled()) {
+            mBluetoothHrManager.scanBluetoothDevices()
+        }
+
         //TODO("Get HR monitors in range in a list")
         //TODO("Show dialog with options")
         //TODO("Connect on click in dialog")
@@ -181,6 +192,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun addDotMarker(location: Location){
 
         if(isAddMarkerPeriodFinished()) {
+            Log.d("marker","Adding marker")
             mMap.addMarker(MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.drawable.position_dot_blue))
                     .position(LatLng(location.latitude, location.longitude))
                     .anchor(0.5f, 0.5f))
@@ -200,9 +212,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     inner class updateDataThread :Thread{
-        constructor():super(){
-
-        }
+        constructor():super()
 
         override fun run(){
             while(true){
@@ -210,7 +220,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
                     runOnUiThread{
                         current_run_elapsed_time.text = formatElapsedTime()
                         current_distance.text = "${(currentRun.distance)} m"
-                        current_pace.text = "${currentRun.pace} m/s"
+                        current_pace.text = formatPace()
                     }
 
                     Thread.sleep(500)
@@ -229,6 +239,18 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
 
             return "${hr}:${min}:${sec}"
         }
+
+        private fun formatPace(): String{
+            if(currentRun.pace > 0.3) {
+                val secondsPerKilometer = Math.round((16.66667 / currentRun.pace) * 60)
+                val min = secondsPerKilometer / 60
+                val sec = secondsPerKilometer % 60
+
+                return "${min}:${sec} /km"
+            } else {
+                return "Not available"
+            }
+        }
     }
 
     //Location listener, that updates whenever the location of the user changes
@@ -239,7 +261,8 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
 
         override fun onLocationChanged(location: Location?) {
 
-            if(location != null && location.accuracy < 15){
+            Log.d("location", "PositionChanged")
+            if(location != null && location.accuracy < 20){
 
                 if(!isPositionAccurate){
                     isPositionAccurate = true
