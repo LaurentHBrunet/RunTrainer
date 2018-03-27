@@ -1,13 +1,15 @@
 package com.brunet.henault.laurent.runtrainer
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
+import android.bluetooth.*
 import android.content.IntentFilter
 import android.content.Intent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.support.v4.app.ActivityCompat.startActivityForResult
 import android.util.Log
+import java.util.*
+import java.nio.ByteBuffer
+import kotlin.experimental.and
 
 
 /**
@@ -15,8 +17,13 @@ import android.util.Log
  */
  class BluetoothHrManager(private val context: Context) {
 
+    private val testMyAddress = "C4:F3:12:4A:D9:81"
+
     private lateinit var mBluetoothAdapter: BluetoothAdapter
-    private var mDiscoveredDevices = mutableListOf<BluetoothDevice>()
+    private lateinit var mBluetoothGatt: BluetoothGatt
+    var mDiscoveredDevices = mutableListOf<BluetoothDevice>()
+    private val HEART_RATE_SERVICE = "00002a37-0000-1000-8000-00805f9b34fb"
+    private var connected = false
 
 
     private val REQUEST_ENABLE_BT = 2
@@ -54,17 +61,98 @@ import android.util.Log
                 // Discovery has found a device. Get the BluetoothDevice
                 // object and its info from the Intent.
                 val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+
+                Log.d("bluetooth", device.address)
                 mDiscoveredDevices.add(device)
+                if(!connected) {
+                    connectBluetoothDevice()
+                }
             }
         }
     }
 
-    fun connectBluetoothDevice(){
+    fun connectBluetoothDevice(discoveredDeviceIndex: Int = 0){
+
+        for( i in mDiscoveredDevices.indices){
+            if(mDiscoveredDevices[i].address == testMyAddress){
+                mBluetoothGatt = mDiscoveredDevices[i].connectGatt(context,true,mGattCallback)
+                connected = true
+            }
+        }
+    }
+
+    val ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE"
+    private val mGattCallback = object: BluetoothGattCallback() {
+        override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+            Log.d("bluetoothService", status.toString())
+        }
+
+        override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.d("BluetoothData",characteristic?.value.toString())
+            }
+        }
+
+        override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
+            Log.d("BluetoothCharacteristic",parseBluetoothByteArray(characteristic?.value!!).toString())
+        }
+
+        override fun onDescriptorRead(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
+            Log.d("BluetoothData",descriptor?.value.toString())
+            //super.onDescriptorRead(gatt, descriptor, status)
+            //mBluetoothGattList.setCharacteristicNotification(descriptor?.characteristic, true)
+        }
+
 
     }
 
-    fun getUpdates(){
+    fun readData() {
+        mBluetoothGatt.services.forEach {
+            it.characteristics.forEach {
+                if (it.uuid == UUID.fromString(HEART_RATE_SERVICE)) {
+                    mBluetoothGatt.readCharacteristic(it)
+                    var descriptorList = mutableListOf<UUID>()
+                    it.descriptors.forEach {
+                        descriptorList.add(it.uuid)
+                    }
+
+                    if(mBluetoothGatt.setCharacteristicNotification(it,true)){
+                        var descriptor = it.getDescriptor(descriptorList[0])
+                        descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                        mBluetoothGatt.writeDescriptor(descriptor)
+                    }
+
+                    //var descriptor = it.getDescriptor(UUID.fromString(HEART_RATE_SERVICE))
+                    //mBluetoothGatt.readDescriptor(descriptor)
+                }
+            //Log.d("bluetoothcharacteristics",it.uuid.toString())
+            }
+        }
+    }
+
+    fun discoverServices(){
+        mBluetoothGatt.discoverServices()
+    }
+
+    fun parseBluetoothByteArray(data: ByteArray): Int{
+
+        var b1 = data[0].toInt()
+        var dataByteArray = ByteArray(4)
+        dataByteArray[0] = data[1]
+        dataByteArray[1] = data[2]
+        var valueBytes = ByteBuffer.wrap(dataByteArray)
+
+
+
+//        if(b1 > 127){
+            return data[1].toInt()
+          //  Log.d("BluetoothHR","under127")
+//        }
+//        else{
+//            return valueBytes.int
+//        }
 
     }
+
 
 }

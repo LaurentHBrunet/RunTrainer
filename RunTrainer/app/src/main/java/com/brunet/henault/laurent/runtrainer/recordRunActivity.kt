@@ -57,11 +57,13 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         pause_play_button.setOnClickListener{
-            managePausePlay()
+            //managePausePlay()
+            mBluetoothHrManager.discoverServices()
         }
 
         stop_run_button.setOnClickListener{
-            finishRunRecording()
+            //finishRunRecording()
+            mBluetoothHrManager.readData()
         }
 
         //TODO("CHECK FOR THE CURRENT UPDATE RATE SETTINGS")
@@ -122,6 +124,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         if(mBluetoothHrManager.isBluetoothEnabled()) {
             mBluetoothHrManager.scanBluetoothDevices()
         }
+
 
         //TODO("Get HR monitors in range in a list")
         //TODO("Show dialog with options")
@@ -261,6 +264,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
 
         override fun onLocationChanged(location: Location?) {
 
+
             Log.d("location", "PositionChanged")
             if(location != null && location.accuracy < 20){
 
@@ -275,7 +279,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
                 currentRun.addLocation(location)
                 currentRun.setCurrentSpeed(location)
             }
-            Log.d("location", "${currentLocation.latitude.toString()}/${currentLocation.longitude.toString()}")
+            Log.d("location", "${currentLocation.latitude.toString()}/${currentLocation.longitude.toString()}, alt : ${currentLocation.altitude}")
         }
 
         override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {
