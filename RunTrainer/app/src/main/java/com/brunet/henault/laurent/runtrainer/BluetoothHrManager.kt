@@ -5,8 +5,10 @@ import android.content.IntentFilter
 import android.content.Intent
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.os.SystemClock
 import android.support.v4.app.ActivityCompat.startActivityForResult
 import android.util.Log
+import android.widget.ArrayAdapter
 import java.util.*
 import java.nio.ByteBuffer
 import kotlin.experimental.and
@@ -18,12 +20,16 @@ import kotlin.experimental.and
  class BluetoothHrManager(private val context: Context) {
 
     private val testMyAddress = "C4:F3:12:4A:D9:81"
+    private val HEART_RATE_SERVICE = "00002a37-0000-1000-8000-00805f9b34fb"
 
     private lateinit var mBluetoothAdapter: BluetoothAdapter
     private lateinit var mBluetoothGatt: BluetoothGatt
+    private lateinit var bluetoothDevicesAdapter: ArrayAdapter<BluetoothDevice>
     var mDiscoveredDevices = mutableListOf<BluetoothDevice>()
-    private val HEART_RATE_SERVICE = "00002a37-0000-1000-8000-00805f9b34fb"
-    private var connected = false
+
+    var currentHr = 0
+    var averageHr: Int? = null
+    private var hrTicks = 0
 
 
     private val REQUEST_ENABLE_BT = 2
@@ -41,6 +47,10 @@ import kotlin.experimental.and
 //        }
 
         return true
+    }
+
+    fun setArrayAdapter(adapter: ArrayAdapter<BluetoothDevice>){
+        bluetoothDevicesAdapter = adapter
     }
 
 
@@ -63,28 +73,44 @@ import kotlin.experimental.and
                 val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
 
                 Log.d("bluetooth", device.address)
-                mDiscoveredDevices.add(device)
-                if(!connected) {
-                    connectBluetoothDevice()
-                }
+
+                addBluetoothDeviceIfUniqueAndNonHidden(device)
+                bluetoothDevicesAdapter.notifyDataSetChanged()
             }
         }
     }
 
-    fun connectBluetoothDevice(discoveredDeviceIndex: Int = 0){
+    private fun addBluetoothDeviceIfUniqueAndNonHidden(device: BluetoothDevice){
+        if(device.name.isNullOrBlank() || device.name.isNullOrEmpty())
+            return
 
-        for( i in mDiscoveredDevices.indices){
-            if(mDiscoveredDevices[i].address == testMyAddress){
-                mBluetoothGatt = mDiscoveredDevices[i].connectGatt(context,true,mGattCallback)
-                connected = true
-            }
+        mDiscoveredDevices.forEach {
+            if(it.address == device.address)
+                return
         }
+
+        mDiscoveredDevices.add(device)
+    }
+
+    fun connectBluetoothDevice(discoveredDeviceIndex: Int = 0){
+        mBluetoothAdapter.cancelDiscovery()
+        mBluetoothGatt = mDiscoveredDevices[discoveredDeviceIndex].connectGatt(context,true,mGattCallback)
+        Log.d("LAURENT", "START SERVICE DISCOVERY")
+        //discoverServices()
+
+//        for( i in mDiscoveredDevices.indices){
+//            if(mDiscoveredDevices[i].address == testMyAddress){
+//                mBluetoothGatt = mDiscoveredDevices[i].connectGatt(context,true,mGattCallback)
+//                connected = true
+//            }
+//        }
     }
 
     val ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE"
     private val mGattCallback = object: BluetoothGattCallback() {
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-            Log.d("bluetoothService", status.toString())
+            Log.d("LAURENT", "Service was discovered")
+            readData()
         }
 
         override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
@@ -94,6 +120,10 @@ import kotlin.experimental.and
         }
 
         override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
+            currentHr = parseBluetoothByteArray(characteristic!!.value)
+            calculateNewHrAverage(parseBluetoothByteArray(characteristic!!.value))
+
+            Log.d("LAURENT","CHARACTERISTIC CHANGED")
             Log.d("BluetoothCharacteristic",parseBluetoothByteArray(characteristic?.value!!).toString())
         }
 
@@ -104,6 +134,15 @@ import kotlin.experimental.and
         }
 
 
+    }
+
+    fun calculateNewHrAverage(newHr: Int){
+        hrTicks++
+        if(averageHr == null){
+            averageHr = newHr
+        } else {
+            averageHr = (averageHr!! * (hrTicks - 1) + newHr) / hrTicks
+        }
     }
 
     fun readData() {
@@ -117,15 +156,12 @@ import kotlin.experimental.and
                     }
 
                     if(mBluetoothGatt.setCharacteristicNotification(it,true)){
+                        Log.d("LAURENT", "Discovered good ccharacteristic to read, setting up")
                         var descriptor = it.getDescriptor(descriptorList[0])
                         descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
                         mBluetoothGatt.writeDescriptor(descriptor)
                     }
-
-                    //var descriptor = it.getDescriptor(UUID.fromString(HEART_RATE_SERVICE))
-                    //mBluetoothGatt.readDescriptor(descriptor)
                 }
-            //Log.d("bluetoothcharacteristics",it.uuid.toString())
             }
         }
     }
@@ -135,23 +171,7 @@ import kotlin.experimental.and
     }
 
     fun parseBluetoothByteArray(data: ByteArray): Int{
-
-        var b1 = data[0].toInt()
-        var dataByteArray = ByteArray(4)
-        dataByteArray[0] = data[1]
-        dataByteArray[1] = data[2]
-        var valueBytes = ByteBuffer.wrap(dataByteArray)
-
-
-
-//        if(b1 > 127){
-            return data[1].toInt()
-          //  Log.d("BluetoothHR","under127")
-//        }
-//        else{
-//            return valueBytes.int
-//        }
-
+        return data[1].toInt()
     }
 
 

@@ -1,8 +1,10 @@
 package com.brunet.henault.laurent.runtrainer
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
@@ -10,8 +12,12 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AlertDialog
+import android.text.format.DateUtils.formatElapsedTime
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.widget.*
 import com.brunet.henault.laurent.runtrainer.R.id.*
 import com.google.android.gms.location.FusedLocationProviderClient
 
@@ -32,8 +38,8 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var locationManager : LocationManager
     private lateinit var currentLocation: Location
     private lateinit var locationListener: MyLocationListener
-    private lateinit var mBluetoothHrManager: BluetoothHrManager
-    private var updatePeriodms: Long = 5000
+    private var mBluetoothHrManager : BluetoothHrManager? = null
+    var updatePeriodms: Long = 5000
     private val ADDMAPMARKERPERIOD = 15000
     private var markerUpdatesInPeriod = ADDMAPMARKERPERIOD / updatePeriodms
     private var markerUpdateCount = 0
@@ -57,13 +63,11 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         pause_play_button.setOnClickListener{
-            //managePausePlay()
-            mBluetoothHrManager.discoverServices()
+            managePausePlay()
         }
 
         stop_run_button.setOnClickListener{
-            //finishRunRecording()
-            mBluetoothHrManager.readData()
+            finishRunRecording()
         }
 
         //TODO("CHECK FOR THE CURRENT UPDATE RATE SETTINGS")
@@ -118,17 +122,24 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun manageHeartRateConnection(){
+        val dialogBuilder = AlertDialog.Builder(this)
+        dialogBuilder.setTitle("Pick a device")
 
         mBluetoothHrManager = BluetoothHrManager(this)
 
-        if(mBluetoothHrManager.isBluetoothEnabled()) {
-            mBluetoothHrManager.scanBluetoothDevices()
+        val arAdapt = BluetoothDevicesAdapter(this, R.layout.bluetooth_device_row, mBluetoothHrManager!!.mDiscoveredDevices)
+
+        mBluetoothHrManager?.setArrayAdapter(arAdapt)
+
+        dialogBuilder.setAdapter(arAdapt,DialogInterface.OnClickListener{ dialog, Int ->
+            mBluetoothHrManager?.connectBluetoothDevice(Int)
+        })
+
+        dialogBuilder.show()
+
+        if(mBluetoothHrManager?.isBluetoothEnabled() == true) {
+            mBluetoothHrManager?.scanBluetoothDevices()
         }
-
-
-        //TODO("Get HR monitors in range in a list")
-        //TODO("Show dialog with options")
-        //TODO("Connect on click in dialog")
     }
 
     private fun showReadyToStartAlert(){
@@ -148,6 +159,8 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         setupLocationListener()
 
         start_run_button.visibility = View.GONE
+
+        mBluetoothHrManager?.discoverServices()
 
         waitForGPSAccuracy()
     }
@@ -224,6 +237,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
                         current_run_elapsed_time.text = formatElapsedTime()
                         current_distance.text = "${(currentRun.distance)} m"
                         current_pace.text = formatPace()
+                        current_hr.text = "${mBluetoothHrManager?.currentHr} BPM"
                     }
 
                     Thread.sleep(500)
@@ -291,4 +305,27 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         override fun onProviderDisabled(p0: String?) {
         }
     }
+
+    inner class BluetoothDevicesAdapter(context: Context,
+                                       textViewResourceId: Int,
+                                       private val items: List<BluetoothDevice>)
+        : ArrayAdapter<BluetoothDevice>(context, textViewResourceId, items) {
+
+        //For each item in items getView is called to fill a row of the List
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            var view: View? = convertView
+
+            if (view == null) {
+                val viewInflater = LayoutInflater.from(context)
+                view = viewInflater.inflate(R.layout.bluetooth_device_row, null) //Sets row view to custom ap_list_row
+            }
+            val obj = items[position]
+            if (obj != null) {
+                val deviceName = view!!.findViewById<TextView>(R.id.device_name)
+                deviceName.text = obj.name
+            }
+            return view!!
+        }
+    }
+
 }

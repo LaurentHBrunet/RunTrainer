@@ -2,8 +2,10 @@ package com.brunet.henault.laurent.runtrainer
 
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.TrafficStats
 import android.os.Build
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.support.design.widget.Snackbar
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat.startActivity
@@ -25,6 +27,7 @@ class MainActivity : AppCompatActivity() {
             startRunRecording()
         }
 
+        initializeSingletons()
         requestMapPermission()
         loadPastRuns()
     }
@@ -40,6 +43,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun initializeSingletons(){
+        try {
+            BatteryManager(this)
+            DataConsumptionManager()
+        } catch (e : Exception) {
+            Log.i("LAURENT", e.toString())
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -51,9 +63,16 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.info_action -> openInfos()
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun openInfos() : Boolean {
+        val infoIntent = Intent(this@MainActivity, InfoActivity::class.java)
+        startActivity(infoIntent)
+
+        return true
     }
 
     private fun startRunRecording() {

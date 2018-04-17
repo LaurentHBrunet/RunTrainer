@@ -3,8 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.brunet.henault.laurent.runtrainer.MainActivity">
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
+        android:id="@+id/info_action"
         android:title="@string/action_settings"
-        app:showAsAction="never" />
+        android:icon="@drawable/info_icon"
+        app:showAsAction="always"/>
 </menu>
