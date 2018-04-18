@@ -27,9 +27,11 @@ class Run {
         timerThreadInstance.start()
     }
 
-    constructor(newDistance: Long, newTime: Long){
+    constructor(newDistance: Long, newTime: Long, newAlt: Long, newAverageHr: Long?){
         distance = newDistance.toFloat()
         elapsedTime = newTime
+        altitudeGain = newAlt.toFloat()
+        averageBPM = newAverageHr?.toInt()
     }
 
     fun isRunning() : Boolean {

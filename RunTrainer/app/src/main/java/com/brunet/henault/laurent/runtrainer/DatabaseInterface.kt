@@ -58,7 +58,14 @@ class DatabaseInterface(private var phoneId : String) { //unique phone ID to sto
             if(it.key != "runIdCounter"){
                 val dist = it.child("Distance").value as Long
                 val time = it.child("Time").value as Long
-                runList.add(Run(dist,time))
+                val alt = it.child("AltitudeGain").value as Long
+
+                if(it.child("AverageHr").exists()){
+                    val averageHr = it.child("AverageHr").value as Long
+                    runList.add(Run(dist, time, alt, averageHr))
+                } else {
+                    runList.add(Run(dist, time, alt, null))
+                }
             }
         }
 
@@ -100,6 +107,10 @@ class DatabaseInterface(private var phoneId : String) { //unique phone ID to sto
         val updatedValues = HashMap<String, Any>()
         updatedValues.put("Distance", newRun.distance)
         updatedValues.put("Time", newRun.elapsedTime)
+        updatedValues.put("AltitudeGain", newRun.altitudeGain)
+        if(newRun.averageBPM != null){
+            updatedValues.put("AverageHr", newRun.averageBPM!!)
+        }
 
         mDatabaseRef.child(phoneId).child(currentRunId.toString())
                 .updateChildren(updatedValues,DatabaseReference.CompletionListener({DatabaseError, DatabaseReference ->

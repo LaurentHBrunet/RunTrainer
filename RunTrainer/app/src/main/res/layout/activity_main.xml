@@ -30,19 +30,34 @@
         android:layout_margin="@dimen/fab_margin"
         app:srcCompat="@android:drawable/ic_input_add" />
 
-
-    <TextView
-        android:id="@+id/fetching_runs_view"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="25dp"
-        android:gravity="center"
-        android:text="Fetching your data, remember you need an internet connection to use RunTrainer."/>
+        android:layout_height="match_parent">
+            <TextView
+                android:id="@+id/your_runs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="80dp"
+                android:paddingLeft="15dp"
+                android:gravity="left"
+                android:textColor="#585858"
+                android:textSize="24dp"
+                android:text="Your saved runs" />
+
+            <TextView
+                android:id="@+id/fetching_runs_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="25dp"
+                android:gravity="center"
+                android:text="Fetching your data, remember you need an internet connection to use RunTrainer."/>
 
 
-    <ListView
-        android:visibility="gone"
-        android:id="@+id/run_list_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"></ListView>
+            <ListView
+                android:visibility="gone"
+                android:id="@+id/run_list_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"></ListView>
+    </LinearLayout>
 </android.support.design.widget.CoordinatorLayout>

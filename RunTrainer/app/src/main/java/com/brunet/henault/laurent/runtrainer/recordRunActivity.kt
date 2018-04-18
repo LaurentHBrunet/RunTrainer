@@ -262,8 +262,8 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
             while(true){
                 try{
                     runOnUiThread{
-                        current_run_elapsed_time.text = "Elapsed time: ${formatElapsedTime()}"
-                        current_distance.text = "Distance : ${(currentRun.distance)} m"
+                        current_run_elapsed_time.text = "Elapsed time: ${formatElapsedTime(currentRun.elapsedTime)}"
+                        current_distance.text = "Distance : ${(currentRun.distance / 1000)} km"
                         current_pace.text = "Current pace : ${formatPace()}"
                         current_hr.text = "Heart rate : ${mBluetoothHrManager?.currentHr} BPM"
                         current_altitude_gain.text = "Altitude gain : ${currentRun.altitudeGain} m"
@@ -276,8 +276,8 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
 
-        private fun formatElapsedTime(): String{
-            val seconds = currentRun.elapsedTime
+        private fun formatElapsedTime(elapsedTime: Long): String{
+            val seconds = elapsedTime
             val hr = seconds / 3600
             val rem = seconds % 3600
             val min = rem / 60

@@ -13,6 +13,7 @@ import android.support.design.widget.Snackbar
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat.startActivity
 import android.support.v7.app.AppCompatActivity
+import android.text.format.DateUtils.formatElapsedTime
 import android.util.Log
 import android.view.*
 import android.widget.ArrayAdapter
@@ -117,12 +118,34 @@ class MainActivity : AppCompatActivity() {
             if (obj != null) {
                 val distTV = view!!.findViewById<TextView>(R.id.distance_textview)
                 val timeTV = view!!.findViewById<TextView>(R.id.time_textview)
+                val altitudeTV = view!!.findViewById<TextView>(R.id.altitude_textview)
+                val bpmTV = view!!.findViewById<TextView>(R.id.hr_textview)
+                val dateTV = view!!.findViewById<TextView>(R.id.date_textview)
 
-                distTV.text = obj.distance.toString()
-                timeTV.text = obj.elapsedTime.toString()
+                dateTV.text = "TODO"
+                altitudeTV.text = "Altitude gain : ${obj.altitudeGain} m"
+                distTV.text = "Distance : ${obj.distance / 1000} km"
+                timeTV.text = "Elapsed time: ${formatElapsedTime(obj.elapsedTime)}"
+
+                if(obj.averageBPM != null){
+                    bpmTV.text = "Heart rate : ${obj.averageBPM} BPM"
+                } else {
+                    bpmTV.text = "No recorded HR"
+                }
             }
             return view!!
         }
+    }
+
+    //MAKE THIS AND RECORDRUNACTIVITY INTO A BASE SHARED UTILS FOLDER
+    private fun formatElapsedTime(elapsedTime: Long): String{
+        val seconds = elapsedTime
+        val hr = seconds / 3600
+        val rem = seconds % 3600
+        val min = rem / 60
+        val sec = rem % 60
+
+        return "${hr}:${min}:${sec}"
     }
 
 }
