@@ -14,16 +14,22 @@ import kotlin.concurrent.timer
 class Run {
     var listOfPositions = mutableListOf<LatLng>()
     var elapsedTime = 0L //elapsed Time in seconds
-    var averageBPM = 0
+    var averageBPM : Int? = null
     var distance = 0.0f
     var pace = 0.0f
     var timerThreadInstance = timerThread()
     var currentlyRunning = true
+    var altitudeGain = 0.0f
 
     private var lastLocation: Location? = null
 
-    init{
+    constructor() {
         timerThreadInstance.start()
+    }
+
+    constructor(newDistance: Long, newTime: Long){
+        distance = newDistance.toFloat()
+        elapsedTime = newTime
     }
 
     fun isRunning() : Boolean {
@@ -44,14 +50,11 @@ class Run {
         currentlyRunning = true
     }
 
-    fun stopRun(){
-        timerThreadInstance.pauseThread()
-    }
-
     fun addLocation(location: Location){
         if(currentlyRunning) {
             if (lastLocation != null) {
                 distance += location.distanceTo(lastLocation)
+                altitudeGain += Math.abs(lastLocation!!.altitude - location.altitude).toFloat()
                 Log.d("distance", location.distanceTo(lastLocation).toString())
             }
             lastLocation = location
@@ -61,13 +64,12 @@ class Run {
 
     inner class timerThread :Thread{
         var pauseThread = false
+        var stopThread = false
 
-        constructor():super(){
-
-        }
+        constructor():super()
 
         override fun run(){
-            while(true){
+            while(!stopThread){
                 if(!pauseThread) {
                     elapsedTime++
 
@@ -75,6 +77,10 @@ class Run {
                 }
                 Thread.sleep(1000)
             }
+        }
+
+        fun stopThread(){
+            stopThread = true
         }
 
         fun pauseThread(){

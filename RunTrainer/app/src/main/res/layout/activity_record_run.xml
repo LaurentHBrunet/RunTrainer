@@ -2,7 +2,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:weightSum="4">
+    android:weightSum="3">
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:map="http://schemas.android.com/apk/res-auto"
@@ -20,9 +20,18 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:weightSum="3"
+        android:weightSum="4"
         android:orientation="vertical"
-        android:layout_weight="3">
+        android:layout_weight="2">
+
+        <TextView
+            android:id="@+id/current_run_elapsed_time"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Elapsed time : 0:0:0"
+            android:layout_weight="1"/>
+
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -32,16 +41,17 @@
             android:layout_weight="1">
 
             <TextView
-                android:id="@+id/current_run_elapsed_time"
+                android:id="@+id/current_altitude_gain"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:layout_weight="1"
-                android:text="0:0:0" />
+                android:text="Altitude gain: 0m " />
+
 
             <TextView
                 android:id="@+id/current_pace"
-                android:text="0 m/s"
+                android:text="Current pace : 0 m/s"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -60,7 +70,7 @@
 
             <TextView
                 android:id="@+id/current_hr"
-                android:text="BPM"
+                android:text="Heart rate : not available"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -68,7 +78,7 @@
 
             <TextView
                 android:id="@+id/current_distance"
-                android:text="0.0 km"
+                android:text="Distance : 0.0 km"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"

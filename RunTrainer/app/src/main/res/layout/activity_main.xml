@@ -30,4 +30,19 @@
         android:layout_margin="@dimen/fab_margin"
         app:srcCompat="@android:drawable/ic_input_add" />
 
+
+    <TextView
+        android:id="@+id/fetching_runs_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="25dp"
+        android:gravity="center"
+        android:text="Fetching your data, remember you need an internet connection to use RunTrainer."/>
+
+
+    <ListView
+        android:visibility="gone"
+        android:id="@+id/run_list_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"></ListView>
 </android.support.design.widget.CoordinatorLayout>

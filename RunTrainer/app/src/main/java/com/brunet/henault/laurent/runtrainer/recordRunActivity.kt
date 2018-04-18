@@ -1,6 +1,7 @@
 package com.brunet.henault.laurent.runtrainer
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.DialogInterface
@@ -11,10 +12,12 @@ import android.location.LocationManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
+import android.support.v4.app.NavUtils
 import android.support.v7.app.AlertDialog
 import android.text.format.DateUtils.formatElapsedTime
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
@@ -45,6 +48,8 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     private var markerUpdateCount = 0
 
     private var isPositionAccurate = false
+
+    private var isMenuHidden = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,6 +88,11 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, updatePeriodms*2, 0.0f, locationListener)
         }
     }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        return super.onCreateOptionsMenu(menu)
+    }
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -173,6 +183,10 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         gps_accuracy_progress.visibility = View.GONE
         start_pause_button_layout.visibility = View.VISIBLE
 
+        this.supportActionBar!!.setDisplayShowHomeEnabled(false)
+        this.supportActionBar!!.setDisplayHomeAsUpEnabled(false)
+        this.supportActionBar!!.setHomeButtonEnabled(false) // disable the button
+
         setCameraPosition(currentLocation)
 
         currentRun = Run()
@@ -183,7 +197,6 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
     private fun managePausePlay() {
-
         if(currentRun.isRunning()){
             currentRun.pauseRun()
             pause_play_button.text = "Resume"
@@ -195,18 +208,34 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
 
     @SuppressLint("MissingPermission")
     private fun finishRunRecording() {
-        locationManager.removeUpdates(locationListener)
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, updatePeriodms, 0.0f, locationListener)
+        currentRun.averageBPM = mBluetoothHrManager?.averageHr //get final average BPM from bluetooth manager
+        currentRun.timerThreadInstance.stopThread()
+
+        locationManager.removeUpdates(locationListener) //Stop requesting position updates, to save battery
+
+
+        val dialogBuilder = AlertDialog.Builder(this)
+        dialogBuilder
+                .setTitle("Saving your run")
+                .setView(R.layout.saving_run_dialog)
+                .setNegativeButton("Cancel save (Your run will be lost)", DialogInterface.OnClickListener{ DialogInterface, Int ->
+                    NavUtils.navigateUpFromSameTask(this)
+                })
+
+        val dialog = dialogBuilder.show()
+
+        DatabaseInterface.instance?.saveNewRun(this, currentRun, dialog)
+
+
+
     }
 
     private fun setCameraPosition(location: Location){
-
         val currentPos = LatLng(location.latitude, location.longitude) //Assign base position
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPos,15.0f)) //Zoom in to that base position
     }
 
     private fun addDotMarker(location: Location){
-
         if(isAddMarkerPeriodFinished()) {
             Log.d("marker","Adding marker")
             mMap.addMarker(MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.drawable.position_dot_blue))
@@ -216,7 +245,6 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun isAddMarkerPeriodFinished(): Boolean{
-
         if(markerUpdateCount < markerUpdatesInPeriod){ //Check if we reached required number of position updates
             markerUpdateCount++
             return false
@@ -234,10 +262,11 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
             while(true){
                 try{
                     runOnUiThread{
-                        current_run_elapsed_time.text = formatElapsedTime()
-                        current_distance.text = "${(currentRun.distance)} m"
-                        current_pace.text = formatPace()
-                        current_hr.text = "${mBluetoothHrManager?.currentHr} BPM"
+                        current_run_elapsed_time.text = "Elapsed time: ${formatElapsedTime()}"
+                        current_distance.text = "Distance : ${(currentRun.distance)} m"
+                        current_pace.text = "Current pace : ${formatPace()}"
+                        current_hr.text = "Heart rate : ${mBluetoothHrManager?.currentHr} BPM"
+                        current_altitude_gain.text = "Altitude gain : ${currentRun.altitudeGain} m"
                     }
 
                     Thread.sleep(500)
@@ -278,9 +307,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
 
         override fun onLocationChanged(location: Location?) {
 
-
-            Log.d("location", "PositionChanged")
-            if(location != null && location.accuracy < 20){
+            if(location != null && location.accuracy <= 20){
 
                 if(!isPositionAccurate){
                     isPositionAccurate = true
@@ -293,7 +320,6 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
                 currentRun.addLocation(location)
                 currentRun.setCurrentSpeed(location)
             }
-            Log.d("location", "${currentLocation.latitude.toString()}/${currentLocation.longitude.toString()}, alt : ${currentLocation.altitude}")
         }
 
         override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {
