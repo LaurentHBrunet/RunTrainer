@@ -4,11 +4,13 @@ import android.net.TrafficStats
 
 /**
  * Created by laurent on 2018-04-11.
+ *
+ * Singleton to check for the bandwidth used since starting the application
  */
 class DataConsumptionManager{
 
     companion object {
-        var instance: DataConsumptionManager? = null
+        var instance: DataConsumptionManager? = null //Singleton instance
     }
 
     private val startingRxBytes : Long

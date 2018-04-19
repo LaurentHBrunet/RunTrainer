@@ -11,17 +11,19 @@ import android.os.BatteryManager
 
 /**
  * Created by laurent on 2018-04-11.
+ *
+ * Singleton instantiated to check for battery level when instantiated and then whenever asked for it
  */
 class BatteryManager (private val context: Context){
 
     companion object {
-        var instance: com.brunet.henault.laurent.runtrainer.BatteryManager? = null
+        var instance: com.brunet.henault.laurent.runtrainer.BatteryManager? = null //Singleton instance
     }
 
     private val startingBatteryLevel: Int
 
     init{
-        if(instance == null)
+        if(instance == null) //Instantiate singleton
             instance = this
         else
             throw InstantiationException()
@@ -29,6 +31,7 @@ class BatteryManager (private val context: Context){
         startingBatteryLevel = getCurrentBatteryLevel()
     }
 
+    //Gets the battery level in percentage of the device
     private fun getCurrentBatteryLevel(): Int {
         var ifilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         var batteryStatus = context.registerReceiver(null, ifilter)
@@ -38,6 +41,8 @@ class BatteryManager (private val context: Context){
         return level * 100 / scale
     }
 
+    //Returns difference between current battery level and beginning battery level
+    // Percentage used since application started
     fun getBatteryUsageSinceStart() : Int {
         return startingBatteryLevel - getCurrentBatteryLevel()
     }

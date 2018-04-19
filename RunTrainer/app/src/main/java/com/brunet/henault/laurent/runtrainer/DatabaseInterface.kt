@@ -15,11 +15,12 @@ import com.google.firebase.database.*
 import java.util.*
 import kotlin.collections.ArrayList
 
+//Class that manages the connection to the firebase database
 
-class DatabaseInterface(private var phoneId : String) { //unique phone ID to store favorites in DB
+class DatabaseInterface(private var phoneId : String) { //unique phone ID to store runs in DB
 
     companion object {
-        var instance: DatabaseInterface? = null
+        var instance: DatabaseInterface? = null //Singleton object
     }
 
     private var mDatabaseRef : DatabaseReference
@@ -38,6 +39,8 @@ class DatabaseInterface(private var phoneId : String) { //unique phone ID to sto
         }
     }
 
+
+    //Gets runs from the database
     fun fetchRuns(activity: MainActivity){
         val runsListener = object: ValueEventListener{
             override fun onCancelled(error: DatabaseError?) {
@@ -52,6 +55,7 @@ class DatabaseInterface(private var phoneId : String) { //unique phone ID to sto
         mDatabaseRef.addListenerForSingleValueEvent(runsListener)
     }
 
+    //Puts the datasnapshot for runs into an ArrayList that can be used to shown in an ListView
     private fun parseRunsSnapshot(snapshot: DataSnapshot): ArrayList<Run> {
         val runList = ArrayList<Run>()
 
@@ -73,7 +77,7 @@ class DatabaseInterface(private var phoneId : String) { //unique phone ID to sto
         return runList
     }
 
-    //Reads the current runIdCounter value on database
+    //Reads the current runIdCounter value on database, Not used for now
     private fun readRunId(initialRead: Boolean, activity: Activity?, newRun: Run?, dialog: AlertDialog?) {
         val runIdListener = object: ValueEventListener{
             override fun onCancelled(error: DatabaseError?) {
@@ -100,10 +104,13 @@ class DatabaseInterface(private var phoneId : String) { //unique phone ID to sto
         mDatabaseRef.addListenerForSingleValueEvent(runIdListener)
     }
 
+    //Saves a new run to the database
     fun saveNewRun(activity: Activity, newRun: Run, dialog: AlertDialog) {
         readRunId(false, activity, newRun, dialog)
     }
 
+
+    //Takes the current run values and  writes them to the database
     private fun setRunValues(activity: Activity, newRun: Run, dialog: AlertDialog) {
         val updatedValues = HashMap<String, Any>()
         updatedValues.put("Distance", newRun.distance.toLong())
@@ -125,6 +132,7 @@ class DatabaseInterface(private var phoneId : String) { //unique phone ID to sto
                 }))
     }
 
+    //When the write to the database process is finished, the saving dialog is closed and the view goes back to main activity
     private fun completeAndExitActivity(activity: Activity, dialog: AlertDialog){
         val recordActivity = activity as recordRunActivity
         recordActivity.unregisterSensors()

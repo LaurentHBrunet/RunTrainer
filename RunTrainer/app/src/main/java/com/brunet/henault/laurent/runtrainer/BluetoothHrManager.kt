@@ -16,10 +16,12 @@ import kotlin.experimental.and
 
 /**
  * Created by laurent on 2018-03-23.
+ *
+ * Class used to manage the communicatinoto the bluetooth device
  */
  class BluetoothHrManager(private val context: Context) {
 
-    private val HEART_RATE_SERVICE = "00002a37-0000-1000-8000-00805f9b34fb"
+    private val HEART_RATE_SERVICE = "00002a37-0000-1000-8000-00805f9b34fb" //Service number referencing heart rate monitors
 
     private lateinit var mBluetoothAdapter: BluetoothAdapter
     private lateinit var bluetoothDevicesAdapter: ArrayAdapter<BluetoothDevice>
@@ -37,22 +39,17 @@ import kotlin.experimental.and
         if (mBluetoothAdapter == null) {
             return false
         }
-//
-//        TODO("setup intent to enable bluetooth directly here")
-//        if (!mBluetoothAdapter.isEnabled) {
-//            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-//
-//            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT,null)
-//        }
 
         return true
     }
 
+    //Array adapter used to update the dialog showing the blutooth options
     fun setArrayAdapter(adapter: ArrayAdapter<BluetoothDevice>){
         bluetoothDevicesAdapter = adapter
     }
 
 
+    //Starts the scan of bluetooth devices
     fun scanBluetoothDevices(){
         val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
         context.registerReceiver(mReceiver, filter)
@@ -61,7 +58,7 @@ import kotlin.experimental.and
     }
 
 
-    // Create a BroadcastReceiver for ACTION_FOUND.
+    // Called when bluetooth device is found
     private val mReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
@@ -70,14 +67,13 @@ import kotlin.experimental.and
                 // object and its info from the Intent.
                 val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
 
-                Log.d("bluetooth", device.address)
-
-                addBluetoothDeviceIfUniqueAndNonHidden(device)
+                addBluetoothDeviceIfUniqueAndNonHidden(device) //Adds the bluetooth device to the device list
                 bluetoothDevicesAdapter.notifyDataSetChanged()
             }
         }
     }
 
+    //Checks if the bluetooth device found is not in the list currently, and that it has a name, otherwise rejected
     private fun addBluetoothDeviceIfUniqueAndNonHidden(device: BluetoothDevice){
         if(device.name.isNullOrBlank() || device.name.isNullOrEmpty())
             return
@@ -90,19 +86,23 @@ import kotlin.experimental.and
         mDiscoveredDevices.add(device)
     }
 
+    //When a device is tapped by the user, connects the device to the bluetooth monitor
     fun connectBluetoothDevice(discoveredDeviceIndex: Int = 0){
         mBluetoothGatt = mDiscoveredDevices[discoveredDeviceIndex].connectGatt(context,true,mGattCallback)
     }
 
+
+    //Callback function for bluetooth monitor
     val ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE"
     private val mGattCallback = object: BluetoothGattCallback() {
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-            readData()
+            readData() //When services discovery returns something, setup the connection to get updates form the bluetooth device
         }
 
         override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
         }
 
+        //Called whenever a characteristic the device is subscribed to changes
         override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
             currentHr = parseBluetoothByteArray(characteristic!!.value)
             calculateNewHrAverage(parseBluetoothByteArray(characteristic!!.value))
@@ -114,6 +114,7 @@ import kotlin.experimental.and
 
     }
 
+    //Calulates Hr average based on previous average and new value
     fun calculateNewHrAverage(newHr: Int){
         hrTicks++
         if(averageHr == null){
@@ -123,6 +124,8 @@ import kotlin.experimental.and
         }
     }
 
+    //When a service is discovered, itterates through the service to find a characteristic that matches
+    // the Heart rate service, and subscribes to that characteristic to get notifications from the monitor when it changes
     fun readData() {
         mBluetoothGatt!!.services.forEach {
             it.characteristics.forEach {
@@ -143,11 +146,13 @@ import kotlin.experimental.and
         }
     }
 
+    //Starts the discovery of services
     fun discoverServices(){
         mBluetoothAdapter.cancelDiscovery()
         mBluetoothGatt?.discoverServices()
     }
 
+    //Parses the byte array to return the actual heart rate reading
     fun parseBluetoothByteArray(data: ByteArray): Int{
         return data[1].toInt()
     }

@@ -19,7 +19,7 @@ import android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
 
 
 
-
+//Class used to read the ambiant light sensor and adjust the screen brightness if necessary
 class AmbiantLightManager(private val activity: Activity) {
     private var oldBrightness = 0.0f
     private var isDimmed = false
@@ -28,6 +28,7 @@ class AmbiantLightManager(private val activity: Activity) {
     private val lightSensorEventListener: SensorEventListener
 
     init{
+        //Initialize the light sensor/manager and the listener for the sensor events
         sensorManager = activity.applicationContext.getSystemService(SENSOR_SERVICE) as SensorManager
         lightSensor = sensorManager.getDefaultSensor(TYPE_LIGHT)
         lightSensorEventListener = object : SensorEventListener {
@@ -41,10 +42,10 @@ class AmbiantLightManager(private val activity: Activity) {
 
                     if(currentReading <= 0.5 && !isDimmed){
                         isDimmed = true
-                        setLightLevel(0.0f)
+                        setLightLevel(0.0f) //If the light is too low, Dim the screen
                     } else if(currentReading > 0.5 && isDimmed) {
                         isDimmed = false
-                        setLightLevel(oldBrightness)
+                        setLightLevel(oldBrightness) //If the light is back after being dark, Go back to previous screen brightness
                     }
                 }
             }
@@ -57,11 +58,12 @@ class AmbiantLightManager(private val activity: Activity) {
         }
     }
 
+    //Function to stop receiving events for sensors
     fun unregisterAmbiantLightManager() {
         sensorManager.unregisterListener(lightSensorEventListener)
     }
 
-    //SET BRIGHTNESS LEVEL BETWEEN 0 and 1.0f
+    //SET BRIGHTNESS LEVEL Of SCREEN BETWEEN 0 and 1.0f
     private fun setLightLevel(lvl: Float){
         val lp = activity.window.attributes
 

@@ -37,6 +37,7 @@ class Run {
         averageBPM = newAverageHr?.toInt()
     }
 
+    //Calculates cadence based on time difference between steps
     fun calculateCadence() {
         if(lastStep != 0L && System.currentTimeMillis() - lastStep < 150) {
             cadence = 60000 / (System.currentTimeMillis() - lastStep).toInt()
@@ -75,6 +76,8 @@ class Run {
         }
     }
 
+    //1 second timer counter, used this instead of System.Time so it is easier to keep track of pauses
+    // Might want to switch back to System.Time just to save a thread.
     inner class timerThread :Thread{
         var pauseThread = false
         var stopThread = false

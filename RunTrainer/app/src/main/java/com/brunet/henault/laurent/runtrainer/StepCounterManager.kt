@@ -9,6 +9,8 @@ import android.hardware.SensorManager
 import android.util.Log
 import android.widget.Toast
 
+
+//Class that implements the step detector to calculate the cadence of a runner
 class StepCounterManager(private val activity: Activity, private val currentRun: Run)  {
     private val sensorManager : SensorManager
     private val stepDetector : Sensor
@@ -24,7 +26,7 @@ class StepCounterManager(private val activity: Activity, private val currentRun:
 
             override fun onSensorChanged(event: SensorEvent) {
                 if (event.sensor.type == Sensor.TYPE_STEP_DETECTOR) {
-                    currentRun.calculateCadence()
+                    currentRun.calculateCadence() //When a step is detected, calculate the new cadence
                 }
             }
         }
@@ -36,6 +38,7 @@ class StepCounterManager(private val activity: Activity, private val currentRun:
         }
     }
 
+    //Unregister the listener to stop getting events
     fun unregisterStepCountListener() {
         sensorManager.unregisterListener(stepDetectorListener)
     }

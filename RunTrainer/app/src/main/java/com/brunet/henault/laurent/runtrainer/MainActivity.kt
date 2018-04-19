@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         loadPastRuns()
     }
 
+    //Requests map permissions
     val ACCESLOCATION=1
     private fun requestMapPermission(){
         //Checks if the user has the right permissions enabled to use GPS
@@ -52,6 +53,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //Initializes the different singletons used in the app
     private fun initializeSingletons(){
         try {
             BatteryManager(this)
@@ -85,15 +87,18 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    //Jump to recordRunActivity
     private fun startRunRecording() {
         val recordRunIntent = Intent(this@MainActivity, recordRunActivity::class.java)
         startActivity(recordRunIntent)
     }
 
+    //Fetch database runs so they are shown in main activity
     private fun loadPastRuns() {
         DatabaseInterface.instance?.fetchRuns(this)
     }
 
+    //Callback from databaseinterface that shows the runs
     fun showPastRuns(runList: ArrayList<Run>) {
         fetching_runs_view.visibility = View.GONE
         run_list_view.visibility = View.VISIBLE
@@ -102,6 +107,7 @@ class MainActivity : AppCompatActivity() {
         runListView.adapter = RunListAdapter(this, runListView.id, runList)
     }
 
+    //Adapter for the run ListView
     inner class RunListAdapter(context: Context,
                                        textViewResourceId: Int,
                                        private val items: ArrayList<Run>) //If this is the current APs view, pass favoritesList adapter so it can be accessed from this
@@ -135,6 +141,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //Formats the time in seconds to show in hr:mn:sc
     //MAKE THIS AND RECORDRUNACTIVITY INTO A BASE SHARED UTILS FOLDER
     private fun formatElapsedTime(elapsedTime: Long): String{
         val seconds = elapsedTime

@@ -56,7 +56,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_record_run)
 
-        requestHeartRateSensorUse()
+        requestHeartRateSensorUse() //Check if user wants to use HR monitor
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
@@ -71,17 +71,19 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
             managePausePlay()
         }
 
-        stop_run_button.setOnClickListener{
+        stop_run_button.setOnClickListener {
             finishRunRecording()
-        } //TODO("CHECK FOR THE CURRENT UPDATE RATE SETTINGS")
+        }
 
     }
 
+    //When run ends, unregister the sensors to save battery
     fun unregisterSensors(){
         ambiantLightManager.unregisterAmbiantLightManager()
         stepCounterManager.unregisterStepCountListener()
     }
 
+    //Setup listener to get gps updates
     private fun setupLocationListener(){
         locationListener = MyLocationListener()
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -118,6 +120,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
 
     }
 
+    //Check if user wants to use a Hr monitor
     private fun requestHeartRateSensorUse(){
         val dialogBuilder = AlertDialog.Builder(this)
 
@@ -134,6 +137,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         dialogBuilder.show()
     }
 
+    //If use wants to use a Hr monitor, make him chose the device he wants to use in a list dialog
     private fun manageHeartRateConnection(){
         val dialogBuilder = AlertDialog.Builder(this)
         dialogBuilder.setTitle("Pick a device")
@@ -145,16 +149,18 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         mBluetoothHrManager?.setArrayAdapter(arAdapt)
 
         dialogBuilder.setAdapter(arAdapt,DialogInterface.OnClickListener{ dialog, Int ->
-            mBluetoothHrManager?.connectBluetoothDevice(Int)
+            mBluetoothHrManager?.connectBluetoothDevice(Int) //When user picks a device, connect to it
         })
 
         dialogBuilder.show()
 
         if(mBluetoothHrManager?.isBluetoothEnabled() == true) {
-            mBluetoothHrManager?.scanBluetoothDevices()
+            mBluetoothHrManager?.scanBluetoothDevices() //If bluetooth is enabled start scanning for devices
         }
     }
 
+
+    //When everything is set, inform user he can start his run
     private fun showReadyToStartAlert(){
         val alertBuilder = AlertDialog.Builder(this)
         alertBuilder.setTitle(R.string.ready_to_start_title)
@@ -167,6 +173,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         alertBuilder.show()
     }
 
+    //Start the the process to start a run, run hasnt actually started yet
     @SuppressLint("MissingPermission")
     private fun startRunRecordingProcess() {
         setupLocationListener()
@@ -178,10 +185,15 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         waitForGPSAccuracy()
     }
 
+    //Shows a progress bar that will be cleared when the run actually start
+    // Waits for the gps to be accurate enough to start
     private fun waitForGPSAccuracy(){
         gps_accuracy_progress.visibility = View.VISIBLE
     }
 
+    //When gps is precise enough, start the run recording.
+    //Setup view
+    //Start sensors and the UI update thread
     private fun startRunRecording(){
         gps_accuracy_progress.visibility = View.GONE
         start_pause_button_layout.visibility = View.VISIBLE
@@ -202,6 +214,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
+    //Setup pause/play button for run
     private fun managePausePlay() {
         if(currentRun.isRunning()){
             currentRun.pauseRun()
@@ -212,6 +225,8 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    //When a run is finished, take all the current run info, save it in DB and wait for DB to be finished
+    // before going back to main activity
     @SuppressLint("MissingPermission")
     private fun finishRunRecording() {
         currentRun.averageBPM = mBluetoothHrManager?.averageHr //get final average BPM from bluetooth manager
@@ -319,7 +334,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
 
                 if(!isPositionAccurate){
                     isPositionAccurate = true
-                    startRunRecording()
+                    startRunRecording() //When position is accurate enough, start recording run
                 }
 
                 currentLocation = location
@@ -340,6 +355,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    //Bluetooth adapter to show the device name when it is scanned
     inner class BluetoothDevicesAdapter(context: Context,
                                        textViewResourceId: Int,
                                        private val items: List<BluetoothDevice>)
