@@ -12,7 +12,7 @@ class InfoActivity : AppCompatActivity() {
 
         batteryUsage.text = "Battery usage: ${BatteryManager.instance?.getBatteryUsageSinceStart().toString()} %"
 
-        dataTx.text = "Outgoing data (Tx) ${DataConsumptionManager.instance?.getTxBytesSinceStart()?.div(1000000).toString()} MB"
-        dataRx.text = "Received data (Rx) ${DataConsumptionManager.instance?.getRxBytesSinceStart()?.div(1000000).toString()} MB"
+        dataTx.text = "Outgoing data (Tx) ${DataConsumptionManager.instance?.getTxBytesSinceStart()?.div(1000).toString()} kB"
+        dataRx.text = "Received data (Rx) ${DataConsumptionManager.instance?.getRxBytesSinceStart()?.div(1000).toString()} kB"
     }
 }
