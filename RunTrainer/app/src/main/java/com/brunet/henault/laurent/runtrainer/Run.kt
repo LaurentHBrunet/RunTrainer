@@ -20,6 +20,9 @@ class Run {
     var timerThreadInstance = timerThread()
     var currentlyRunning = true
     var altitudeGain = 0.0f
+    var cadence = 0
+
+    private var lastStep = 0L
 
     private var lastLocation: Location? = null
 
@@ -32,6 +35,14 @@ class Run {
         elapsedTime = newTime
         altitudeGain = newAlt.toFloat()
         averageBPM = newAverageHr?.toInt()
+    }
+
+    fun calculateCadence() {
+        if(lastStep != 0L && System.currentTimeMillis() - lastStep < 150) {
+            cadence = 60000 / (System.currentTimeMillis() - lastStep).toInt()
+        }
+
+        lastStep = System.currentTimeMillis()
     }
 
     fun isRunning() : Boolean {

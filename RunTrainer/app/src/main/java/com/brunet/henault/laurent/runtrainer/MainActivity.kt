@@ -120,9 +120,7 @@ class MainActivity : AppCompatActivity() {
                 val timeTV = view!!.findViewById<TextView>(R.id.time_textview)
                 val altitudeTV = view!!.findViewById<TextView>(R.id.altitude_textview)
                 val bpmTV = view!!.findViewById<TextView>(R.id.hr_textview)
-                val dateTV = view!!.findViewById<TextView>(R.id.date_textview)
 
-                dateTV.text = "TODO"
                 altitudeTV.text = "Altitude gain : ${obj.altitudeGain} m"
                 distTV.text = "Distance : ${obj.distance / 1000} km"
                 timeTV.text = "Elapsed time: ${formatElapsedTime(obj.elapsedTime)}"

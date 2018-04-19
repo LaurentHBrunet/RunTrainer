@@ -42,14 +42,14 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var currentLocation: Location
     private lateinit var locationListener: MyLocationListener
     private var mBluetoothHrManager : BluetoothHrManager? = null
-    var updatePeriodms: Long = 5000
+    private var updatePeriodms: Long = 5000
     private val ADDMAPMARKERPERIOD = 15000
     private var markerUpdatesInPeriod = ADDMAPMARKERPERIOD / updatePeriodms
     private var markerUpdateCount = 0
 
     private var isPositionAccurate = false
-
-    private var isMenuHidden = false
+    private lateinit var ambiantLightManager : AmbiantLightManager
+    private lateinit var stepCounterManager: StepCounterManager
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,10 +73,13 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
 
         stop_run_button.setOnClickListener{
             finishRunRecording()
-        }
+        } //TODO("CHECK FOR THE CURRENT UPDATE RATE SETTINGS")
 
-        //TODO("CHECK FOR THE CURRENT UPDATE RATE SETTINGS")
+    }
 
+    fun unregisterSensors(){
+        ambiantLightManager.unregisterAmbiantLightManager()
+        stepCounterManager.unregisterStepCountListener()
     }
 
     private fun setupLocationListener(){
@@ -191,6 +194,9 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
 
         currentRun = Run()
 
+        ambiantLightManager = AmbiantLightManager(this)
+        stepCounterManager = StepCounterManager(this, currentRun)
+
         val updateDataThread = updateDataThread()
         updateDataThread.start()
     }
@@ -220,6 +226,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
                 .setView(R.layout.saving_run_dialog)
                 .setNegativeButton("Cancel save (Your run will be lost)", DialogInterface.OnClickListener{ DialogInterface, Int ->
                     NavUtils.navigateUpFromSameTask(this)
+                    unregisterSensors()
                 })
 
         val dialog = dialogBuilder.show()
@@ -267,6 +274,7 @@ class recordRunActivity : AppCompatActivity(), OnMapReadyCallback {
                         current_pace.text = "Current pace : ${formatPace()}"
                         current_hr.text = "Heart rate : ${mBluetoothHrManager?.currentHr} BPM"
                         current_altitude_gain.text = "Altitude gain : ${currentRun.altitudeGain} m"
+                        current_cadence.text = "Cadence : ${currentRun.cadence} steps/min"
                     }
 
                     Thread.sleep(500)

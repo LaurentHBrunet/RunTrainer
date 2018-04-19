@@ -24,14 +24,27 @@
         android:orientation="vertical"
         android:layout_weight="2">
 
-        <TextView
-            android:id="@+id/current_run_elapsed_time"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="Elapsed time : 0:0:0"
-            android:layout_weight="1"/>
-
+            android:weightSum="2"
+            android:orientation="horizontal"
+            android:layout_weight="1">
+                <TextView
+                    android:id="@+id/current_run_elapsed_time"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="Elapsed time : 0:0:0"
+                    android:layout_weight="1"/>
+                <TextView
+                    android:id="@+id/current_cadence"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="Cadence : 0 steps/min"
+                    android:layout_weight="1"/>
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"

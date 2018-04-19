@@ -3,6 +3,7 @@ package com.brunet.henault.laurent.runtrainer
 import android.app.Activity
 import android.content.Context
 import android.content.pm.InstrumentationInfo
+import android.icu.util.UniversalTimeScale.toLong
 import android.location.Location
 import android.provider.ContactsContract
 import android.support.v4.app.NavUtils
@@ -54,7 +55,7 @@ class DatabaseInterface(private var phoneId : String) { //unique phone ID to sto
     private fun parseRunsSnapshot(snapshot: DataSnapshot): ArrayList<Run> {
         val runList = ArrayList<Run>()
 
-        snapshot.children.forEach{
+        snapshot.children.reversed().forEach{
             if(it.key != "runIdCounter"){
                 val dist = it.child("Distance").value as Long
                 val time = it.child("Time").value as Long
@@ -83,7 +84,7 @@ class DatabaseInterface(private var phoneId : String) { //unique phone ID to sto
                 DatabaseInterface.instance?.isRunIdReadSuccessful = true
                 if(snapshot != null) {
                     if(snapshot.child(phoneId).child("runIdCounter").exists()){
-                        currentRunId = snapshot.child(phoneId).child("runIdCounter").value as Long
+                        currentRunId = snapshot.child(phoneId).child("runIdCounter").value.toString().toLong()
 
                         if(!initialRead) {
                             mDatabaseRef.child(phoneId).child("runIdCounter").setValue(currentRunId + 1)
@@ -105,11 +106,11 @@ class DatabaseInterface(private var phoneId : String) { //unique phone ID to sto
 
     private fun setRunValues(activity: Activity, newRun: Run, dialog: AlertDialog) {
         val updatedValues = HashMap<String, Any>()
-        updatedValues.put("Distance", newRun.distance)
+        updatedValues.put("Distance", newRun.distance.toLong())
         updatedValues.put("Time", newRun.elapsedTime)
-        updatedValues.put("AltitudeGain", newRun.altitudeGain)
+        updatedValues.put("AltitudeGain", newRun.altitudeGain.toLong())
         if(newRun.averageBPM != null){
-            updatedValues.put("AverageHr", newRun.averageBPM!!)
+            updatedValues.put("AverageHr", newRun.averageBPM!!.toLong())
         }
 
         mDatabaseRef.child(phoneId).child(currentRunId.toString())
@@ -125,6 +126,8 @@ class DatabaseInterface(private var phoneId : String) { //unique phone ID to sto
     }
 
     private fun completeAndExitActivity(activity: Activity, dialog: AlertDialog){
+        val recordActivity = activity as recordRunActivity
+        recordActivity.unregisterSensors()
         NavUtils.navigateUpFromSameTask(activity)
         dialog.dismiss()
     }

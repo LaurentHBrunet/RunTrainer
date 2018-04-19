@@ -6,7 +6,7 @@
     android:fitsSystemWindows="true">
 
     <LinearLayout
-        android:weightSum="3"
+        android:weightSum="2"
         android:background="#D8D8D8"
         android:orientation="vertical"
         android:layout_width="match_parent"
@@ -14,14 +14,14 @@
         android:padding="15dp"
         android:layout_margin="15dp">
 
-        <TextView
-            android:background="#000000"
-            android:padding="15dp"
-            android:layout_weight="1"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             android:id="@+id/date_textview"
-             android:text="Run date"/>
+        <!--<TextView-->
+            <!--android:background="#000000"-->
+            <!--android:padding="15dp"-->
+            <!--android:layout_weight="1"-->
+             <!--android:layout_width="match_parent"-->
+             <!--android:layout_height="match_parent"-->
+             <!--android:id="@+id/date_textview"-->
+             <!--android:text="Run date"/>-->
 
 
         <LinearLayout
