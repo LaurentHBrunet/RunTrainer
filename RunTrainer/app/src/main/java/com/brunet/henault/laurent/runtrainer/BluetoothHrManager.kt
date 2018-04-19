@@ -146,15 +146,17 @@ import kotlin.experimental.and
         }
     }
 
+
     //Starts the discovery of services
     fun discoverServices(){
         mBluetoothAdapter.cancelDiscovery()
         mBluetoothGatt?.discoverServices()
     }
 
+
     //Parses the byte array to return the actual heart rate reading
     fun parseBluetoothByteArray(data: ByteArray): Int{
-        return data[1].toInt()
+        return data[1].toInt().and(0xFF)
     }
 
 

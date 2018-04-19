@@ -39,7 +39,7 @@ class Run {
 
     //Calculates cadence based on time difference between steps
     fun calculateCadence() {
-        if(lastStep != 0L && System.currentTimeMillis() - lastStep < 150) {
+        if(lastStep != 0L && System.currentTimeMillis() - lastStep > 150) {
             cadence = 60000 / (System.currentTimeMillis() - lastStep).toInt()
         }
 
