@@ -2,6 +2,7 @@ package com.brunet.henault.laurent.runtrainer
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import kotlinx.android.synthetic.main.activity_info.*
 
 
@@ -11,6 +12,10 @@ class InfoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_info)
+
+        if(true){
+            Log.d("test","test")
+        }
 
         batteryUsage.text = "Battery usage: ${BatteryManager.instance?.getBatteryUsageSinceStart().toString()} %"
 
